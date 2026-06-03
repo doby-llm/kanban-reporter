@@ -1,0 +1,1097 @@
+{
+  "$defs": {
+    "ActiveItem": {
+      "additionalProperties": false,
+      "properties": {
+        "task_id": {
+          "pattern": "^t_[0-9a-f]+$",
+          "title": "Task Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/KanbanStatus"
+        },
+        "assignee": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Assignee"
+        },
+        "last_update_local": {
+          "minLength": 1,
+          "title": "Last Update Local",
+          "type": "string"
+        },
+        "last_update_age_label": {
+          "minLength": 1,
+          "title": "Last Update Age Label",
+          "type": "string"
+        },
+        "current_signal": {
+          "minLength": 1,
+          "title": "Current Signal",
+          "type": "string"
+        },
+        "priority": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Priority"
+        },
+        "parent_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Parent Ids",
+          "type": "array"
+        },
+        "child_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Child Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "task_id",
+        "title",
+        "status",
+        "last_update_local",
+        "last_update_age_label",
+        "current_signal"
+      ],
+      "title": "ActiveItem",
+      "type": "object"
+    },
+    "ActiveSection": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ActiveItem"
+          },
+          "title": "Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "title": "ActiveSection",
+      "type": "object"
+    },
+    "Appendix": {
+      "additionalProperties": false,
+      "properties": {
+        "status_counts": {
+          "items": {
+            "$ref": "#/$defs/StatusCount"
+          },
+          "title": "Status Counts",
+          "type": "array"
+        },
+        "assignee_counts": {
+          "items": {
+            "$ref": "#/$defs/AssigneeCount"
+          },
+          "title": "Assignee Counts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status_counts",
+        "assignee_counts"
+      ],
+      "title": "Appendix",
+      "type": "object"
+    },
+    "AssigneeCount": {
+      "additionalProperties": false,
+      "properties": {
+        "assignee": {
+          "minLength": 1,
+          "title": "Assignee",
+          "type": "string"
+        },
+        "todo": {
+          "minimum": 0,
+          "title": "Todo",
+          "type": "integer"
+        },
+        "ready": {
+          "minimum": 0,
+          "title": "Ready",
+          "type": "integer"
+        },
+        "running": {
+          "minimum": 0,
+          "title": "Running",
+          "type": "integer"
+        },
+        "blocked": {
+          "minimum": 0,
+          "title": "Blocked",
+          "type": "integer"
+        },
+        "done": {
+          "minimum": 0,
+          "title": "Done",
+          "type": "integer"
+        },
+        "total": {
+          "minimum": 0,
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "assignee",
+        "todo",
+        "ready",
+        "running",
+        "blocked",
+        "done",
+        "total"
+      ],
+      "title": "AssigneeCount",
+      "type": "object"
+    },
+    "BlockerItem": {
+      "additionalProperties": false,
+      "properties": {
+        "task_id": {
+          "pattern": "^t_[0-9a-f]+$",
+          "title": "Task Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "assignee": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Assignee"
+        },
+        "status": {
+          "$ref": "#/$defs/KanbanStatus",
+          "default": "blocked"
+        },
+        "severity": {
+          "$ref": "#/$defs/RiskLevel"
+        },
+        "blocked_reason": {
+          "minLength": 1,
+          "title": "Blocked Reason",
+          "type": "string"
+        },
+        "blocked_since_local": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Blocked Since Local"
+        },
+        "blocked_age_label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Blocked Age Label"
+        },
+        "needed_next": {
+          "minLength": 1,
+          "title": "Needed Next",
+          "type": "string"
+        },
+        "last_comment_excerpt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Comment Excerpt"
+        }
+      },
+      "required": [
+        "task_id",
+        "title",
+        "severity",
+        "blocked_reason",
+        "needed_next"
+      ],
+      "title": "BlockerItem",
+      "type": "object"
+    },
+    "BlockersSection": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/BlockerItem"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "empty_message": {
+          "default": "No blocked tasks right now.",
+          "title": "Empty Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "title": "BlockersSection",
+      "type": "object"
+    },
+    "ChangeEventType": {
+      "enum": [
+        "created",
+        "claimed",
+        "completed",
+        "blocked",
+        "unblocked",
+        "failed",
+        "reassigned",
+        "commented",
+        "archived"
+      ],
+      "title": "ChangeEventType",
+      "type": "string"
+    },
+    "ChangeItem": {
+      "additionalProperties": false,
+      "properties": {
+        "timestamp_local": {
+          "minLength": 1,
+          "title": "Timestamp Local",
+          "type": "string"
+        },
+        "event_type": {
+          "$ref": "#/$defs/ChangeEventType"
+        },
+        "task_id": {
+          "pattern": "^t_[0-9a-f]+$",
+          "title": "Task Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "assignee": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Assignee"
+        },
+        "summary": {
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        }
+      },
+      "required": [
+        "timestamp_local",
+        "event_type",
+        "task_id",
+        "title",
+        "summary",
+        "severity"
+      ],
+      "title": "ChangeItem",
+      "type": "object"
+    },
+    "ChangesSection": {
+      "additionalProperties": false,
+      "properties": {
+        "window_start_local": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Window Start Local"
+        },
+        "window_end_local": {
+          "minLength": 1,
+          "title": "Window End Local",
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ChangeItem"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "omitted_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Omitted Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "window_end_local",
+        "items"
+      ],
+      "title": "ChangesSection",
+      "type": "object"
+    },
+    "CompletedItem": {
+      "additionalProperties": false,
+      "properties": {
+        "task_id": {
+          "pattern": "^t_[0-9a-f]+$",
+          "title": "Task Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "assignee": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Assignee"
+        },
+        "completed_at_local": {
+          "minLength": 1,
+          "title": "Completed At Local",
+          "type": "string"
+        },
+        "summary": {
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        },
+        "metadata_highlights": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 3,
+          "title": "Metadata Highlights",
+          "type": "array"
+        }
+      },
+      "required": [
+        "task_id",
+        "title",
+        "completed_at_local",
+        "summary"
+      ],
+      "title": "CompletedItem",
+      "type": "object"
+    },
+    "CompletedSection": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/CompletedItem"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "omitted_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Omitted Count",
+          "type": "integer"
+        },
+        "empty_message": {
+          "default": "No completed tasks during this reporting window.",
+          "title": "Empty Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "title": "CompletedSection",
+      "type": "object"
+    },
+    "Delivery": {
+      "additionalProperties": false,
+      "properties": {
+        "summary_line": {
+          "minLength": 1,
+          "title": "Summary Line",
+          "type": "string"
+        },
+        "primary_risk_line": {
+          "minLength": 1,
+          "title": "Primary Risk Line",
+          "type": "string"
+        },
+        "next_run_line": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next Run Line"
+        },
+        "attachment_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attachment Path"
+        },
+        "media_tag": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Media Tag"
+        },
+        "filename": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Filename"
+        }
+      },
+      "required": [
+        "summary_line",
+        "primary_risk_line"
+      ],
+      "title": "Delivery",
+      "type": "object"
+    },
+    "DependenciesSection": {
+      "additionalProperties": false,
+      "properties": {
+        "root_count": {
+          "minimum": 0,
+          "title": "Root Count",
+          "type": "integer"
+        },
+        "with_children_count": {
+          "minimum": 0,
+          "title": "With Children Count",
+          "type": "integer"
+        },
+        "waiting_on_parents_count": {
+          "minimum": 0,
+          "title": "Waiting On Parents Count",
+          "type": "integer"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/DependencyItem"
+          },
+          "title": "Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "root_count",
+        "with_children_count",
+        "waiting_on_parents_count",
+        "items"
+      ],
+      "title": "DependenciesSection",
+      "type": "object"
+    },
+    "DependencyItem": {
+      "additionalProperties": false,
+      "properties": {
+        "task_id": {
+          "pattern": "^t_[0-9a-f]+$",
+          "title": "Task Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "waiting_on_task_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Waiting On Task Ids",
+          "type": "array"
+        },
+        "unblocked_when": {
+          "minLength": 1,
+          "title": "Unblocked When",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "title",
+        "waiting_on_task_ids",
+        "unblocked_when"
+      ],
+      "title": "DependencyItem",
+      "type": "object"
+    },
+    "ExecutiveSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "bullets": {
+          "items": {
+            "$ref": "#/$defs/SummaryBullet"
+          },
+          "maxItems": 5,
+          "minItems": 1,
+          "title": "Bullets",
+          "type": "array"
+        },
+        "next_update_at_local": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next Update At Local"
+        }
+      },
+      "required": [
+        "bullets"
+      ],
+      "title": "ExecutiveSummary",
+      "type": "object"
+    },
+    "GeneratorMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "default": "kanban-reporting",
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "default": "1.0.0",
+          "title": "Version",
+          "type": "string"
+        },
+        "run_id": {
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "run_id"
+      ],
+      "title": "GeneratorMetadata",
+      "type": "object"
+    },
+    "Health": {
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "$ref": "#/$defs/HealthLevel"
+        },
+        "summary": {
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "level",
+        "summary"
+      ],
+      "title": "Health",
+      "type": "object"
+    },
+    "HealthLevel": {
+      "enum": [
+        "ok",
+        "attention",
+        "blocked",
+        "critical"
+      ],
+      "title": "HealthLevel",
+      "type": "string"
+    },
+    "KanbanStatus": {
+      "enum": [
+        "triage",
+        "todo",
+        "ready",
+        "running",
+        "blocked",
+        "done",
+        "archived"
+      ],
+      "title": "KanbanStatus",
+      "type": "string"
+    },
+    "Metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "total_tasks": {
+          "minimum": 0,
+          "title": "Total Tasks",
+          "type": "integer"
+        },
+        "running_count": {
+          "minimum": 0,
+          "title": "Running Count",
+          "type": "integer"
+        },
+        "blocked_count": {
+          "minimum": 0,
+          "title": "Blocked Count",
+          "type": "integer"
+        },
+        "ready_count": {
+          "minimum": 0,
+          "title": "Ready Count",
+          "type": "integer"
+        },
+        "done_since_last_report_count": {
+          "minimum": 0,
+          "title": "Done Since Last Report Count",
+          "type": "integer"
+        },
+        "changed_since_last_report_count": {
+          "minimum": 0,
+          "title": "Changed Since Last Report Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_tasks",
+        "running_count",
+        "blocked_count",
+        "ready_count",
+        "done_since_last_report_count",
+        "changed_since_last_report_count"
+      ],
+      "title": "Metrics",
+      "type": "object"
+    },
+    "ReportMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "default": "Kanban status report",
+          "title": "Title",
+          "type": "string"
+        },
+        "project_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Project Name"
+        },
+        "board_name": {
+          "minLength": 1,
+          "title": "Board Name",
+          "type": "string"
+        },
+        "source": {
+          "default": "hermes-kanban",
+          "title": "Source",
+          "type": "string"
+        },
+        "generated_at_local": {
+          "minLength": 1,
+          "title": "Generated At Local",
+          "type": "string"
+        },
+        "timezone": {
+          "minLength": 1,
+          "title": "Timezone",
+          "type": "string"
+        },
+        "window": {
+          "$ref": "#/$defs/ReportWindow"
+        },
+        "window_label": {
+          "minLength": 1,
+          "title": "Window Label",
+          "type": "string"
+        },
+        "job_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Job Id"
+        },
+        "generator": {
+          "$ref": "#/$defs/GeneratorMetadata"
+        }
+      },
+      "required": [
+        "board_name",
+        "generated_at_local",
+        "timezone",
+        "window",
+        "window_label",
+        "generator"
+      ],
+      "title": "ReportMetadata",
+      "type": "object"
+    },
+    "ReportWindow": {
+      "additionalProperties": false,
+      "properties": {
+        "since": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Since"
+        },
+        "until": {
+          "format": "date-time",
+          "title": "Until",
+          "type": "string"
+        },
+        "label": {
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "until",
+        "label"
+      ],
+      "title": "ReportWindow",
+      "type": "object"
+    },
+    "RiskItem": {
+      "additionalProperties": false,
+      "properties": {
+        "task_id": {
+          "pattern": "^t_[0-9a-f]+$",
+          "title": "Task Id",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "risk_level": {
+          "$ref": "#/$defs/RiskLevel"
+        },
+        "risk_reason": {
+          "minLength": 1,
+          "title": "Risk Reason",
+          "type": "string"
+        },
+        "age_label": {
+          "minLength": 1,
+          "title": "Age Label",
+          "type": "string"
+        },
+        "recommended_action": {
+          "minLength": 1,
+          "title": "Recommended Action",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "title",
+        "risk_level",
+        "risk_reason",
+        "age_label",
+        "recommended_action"
+      ],
+      "title": "RiskItem",
+      "type": "object"
+    },
+    "RiskLevel": {
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low",
+        "none"
+      ],
+      "title": "RiskLevel",
+      "type": "string"
+    },
+    "RiskThreshold": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "description"
+      ],
+      "title": "RiskThreshold",
+      "type": "object"
+    },
+    "RisksSection": {
+      "additionalProperties": false,
+      "properties": {
+        "thresholds": {
+          "items": {
+            "$ref": "#/$defs/RiskThreshold"
+          },
+          "title": "Thresholds",
+          "type": "array"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/RiskItem"
+          },
+          "title": "Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "thresholds",
+        "items"
+      ],
+      "title": "RisksSection",
+      "type": "object"
+    },
+    "Severity": {
+      "enum": [
+        "info",
+        "success",
+        "warning",
+        "danger"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "StatusCount": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/KanbanStatus"
+        },
+        "count": {
+          "minimum": 0,
+          "title": "Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "status",
+        "count"
+      ],
+      "title": "StatusCount",
+      "type": "object"
+    },
+    "SummaryBullet": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "enum": [
+            "Progress",
+            "Risk",
+            "Decision",
+            "Next",
+            "Note"
+          ],
+          "title": "Label",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        }
+      },
+      "required": [
+        "label",
+        "text",
+        "severity"
+      ],
+      "title": "SummaryBullet",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "report": {
+      "$ref": "#/$defs/ReportMetadata"
+    },
+    "health": {
+      "$ref": "#/$defs/Health"
+    },
+    "metrics": {
+      "$ref": "#/$defs/Metrics"
+    },
+    "summary": {
+      "$ref": "#/$defs/ExecutiveSummary"
+    },
+    "blockers": {
+      "$ref": "#/$defs/BlockersSection"
+    },
+    "changes": {
+      "$ref": "#/$defs/ChangesSection"
+    },
+    "active": {
+      "$ref": "#/$defs/ActiveSection"
+    },
+    "completed": {
+      "$ref": "#/$defs/CompletedSection"
+    },
+    "risks": {
+      "$ref": "#/$defs/RisksSection"
+    },
+    "dependencies": {
+      "$ref": "#/$defs/DependenciesSection"
+    },
+    "appendix": {
+      "$ref": "#/$defs/Appendix"
+    },
+    "delivery": {
+      "$ref": "#/$defs/Delivery"
+    }
+  },
+  "required": [
+    "schema_version",
+    "generated_at",
+    "report",
+    "health",
+    "metrics",
+    "summary",
+    "blockers",
+    "changes",
+    "active",
+    "completed",
+    "risks",
+    "dependencies",
+    "appendix",
+    "delivery"
+  ],
+  "title": "BoardReport",
+  "type": "object"
+}

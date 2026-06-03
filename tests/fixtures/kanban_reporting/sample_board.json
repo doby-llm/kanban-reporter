@@ -1,0 +1,85 @@
+{
+  "board_name": "example-board",
+  "project_name": "Example Project",
+  "timezone": "Europe/Zurich",
+  "window_label": "Since previous run",
+  "generated_at": "2026-06-03T15:20:00+02:00",
+  "window_start": "2026-06-03T14:40:00+02:00",
+  "window_end": "2026-06-03T15:20:00+02:00",
+  "run_id": "20260603-152000",
+  "job_id": "job-example",
+  "next_update_at_local": "2026-06-03 16:00 Europe/Zurich",
+  "tasks": [
+    {
+      "task_id": "t_a1b2c3",
+      "title": "Implement report renderer",
+      "status": "running",
+      "assignee": "coder",
+      "priority": 90,
+      "last_update_local": "2026-06-03 15:15",
+      "last_update_age_label": "5m ago",
+      "current_signal": "Renderer smoke test is in progress.",
+      "parent_ids": [],
+      "child_ids": ["t_b2c3d4"]
+    },
+    {
+      "task_id": "t_b2c3d4",
+      "title": "Review generated PDF",
+      "status": "blocked",
+      "assignee": "reviewer",
+      "priority": 80,
+      "last_update_local": "2026-06-03 15:00",
+      "last_update_age_label": "20m ago",
+      "current_signal": "Waiting for generated PDF artifact.",
+      "blocked_reason": "Needs human approval before push.",
+      "blocked_since_local": "2026-06-03 15:00",
+      "blocked_age_label": "20m",
+      "needed_next": "Review the PDF artifact and approve push.",
+      "severity": "high",
+      "last_comment_excerpt": "review-required: needs git push"
+    },
+    {
+      "task_id": "t_c3d4e5",
+      "title": "Wire cron delivery",
+      "status": "ready",
+      "assignee": "orchestrator",
+      "priority": 70,
+      "last_update_local": "2026-06-03 15:10",
+      "last_update_age_label": "10m ago",
+      "current_signal": "Ready after schema and renderer land."
+    },
+    {
+      "task_id": "t_d4e5f6",
+      "title": "Document reporting architecture",
+      "status": "done",
+      "assignee": "architect",
+      "priority": 50,
+      "last_update_local": "2026-06-03 14:50",
+      "last_update_age_label": "30m ago",
+      "current_signal": "Architecture accepted.",
+      "completed_at_local": "2026-06-03 14:50",
+      "summary": "Architecture handoff accepted.",
+      "metadata_highlights": ["schema", "ReportLab", "uv"]
+    }
+  ],
+  "changes": [
+    {
+      "timestamp_local": "2026-06-03 14:50",
+      "event_type": "completed",
+      "task_id": "t_d4e5f6",
+      "title": "Document reporting architecture",
+      "assignee": "architect",
+      "summary": "Architecture handoff accepted.",
+      "severity": "success"
+    },
+    {
+      "timestamp_local": "2026-06-03 15:00",
+      "event_type": "blocked",
+      "task_id": "t_b2c3d4",
+      "title": "Review generated PDF",
+      "assignee": "reviewer",
+      "summary": "Waiting for generated PDF artifact.",
+      "severity": "warning"
+    }
+  ]
+}
