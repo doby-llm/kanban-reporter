@@ -44,6 +44,7 @@ def collect_live_snapshot(
         stderr=subprocess.PIPE,
     )
     rows = json.loads(result.stdout)
+    blocked_details = _collect_blocked_details(cli, board_name, rows)
     return build_snapshot_from_list_rows(
         rows,
         board_name=board_name,
@@ -53,6 +54,7 @@ def collect_live_snapshot(
         job_id=job_id,
         window_minutes=window_minutes,
         next_update_at_local=next_update_at_local,
+        blocked_details_by_id=blocked_details,
     )
 
 
@@ -66,11 +68,20 @@ def build_snapshot_from_list_rows(
     job_id: str | None = None,
     window_minutes: int = 40,
     next_update_at_local: str | None = None,
+    blocked_details_by_id: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     tz = ZoneInfo(timezone_name)
     generated_local = generated_at.astimezone(tz)
     window_start = generated_local - timedelta(minutes=window_minutes)
-    tasks = [_normalize_task(row, generated_local, tz) for row in rows]
+    tasks = [
+        _normalize_task(
+            row,
+            generated_local,
+            tz,
+            blocked_detail=(blocked_details_by_id or {}).get(str(row.get("id"))),
+        )
+        for row in rows
+    ]
     changes = _changes_from_tasks(tasks, window_start=window_start, window_end=generated_local)
     run_id = generated_local.strftime("%Y%m%d-%H%M%S")
 
@@ -97,7 +108,13 @@ def build_snapshot_from_list_rows(
     return snapshot
 
 
-def _normalize_task(row: dict[str, Any], generated_local: datetime, tz: ZoneInfo) -> dict[str, Any]:
+def _normalize_task(
+    row: dict[str, Any],
+    generated_local: datetime,
+    tz: ZoneInfo,
+    *,
+    blocked_detail: str | None = None,
+) -> dict[str, Any]:
     status = row["status"]
     last_update = _last_update(row, tz)
     task: dict[str, Any] = {
@@ -113,12 +130,16 @@ def _normalize_task(row: dict[str, Any], generated_local: datetime, tz: ZoneInfo
         "child_ids": row.get("child_ids") or row.get("children") or [],
     }
     if status == "blocked":
+        fallback_reason = "Blocked in Hermes Kanban; no detailed reason was present in the list export."
+        blocked_reason = blocked_detail or fallback_reason
         task.update(
             {
-                "blocked_reason": "Blocked in Hermes Kanban; no detailed reason was present in the list export.",
+                "blocked_reason": blocked_reason,
                 "blocked_since_local": _display_dt(last_update, tz.key),
                 "blocked_age_label": _age_label(last_update, generated_local),
-                "needed_next": "Open the task details and resolve the blocker or provide the missing decision.",
+                "needed_next": blocked_reason
+                if blocked_detail
+                else "Open the task details and resolve the blocker or provide the missing decision.",
                 "severity": "high",
             }
         )
@@ -126,6 +147,119 @@ def _normalize_task(row: dict[str, Any], generated_local: datetime, tz: ZoneInfo
         task["completed_at_local"] = _display_dt(last_update, tz.key)
         task["summary"] = "Completed in Hermes Kanban."
     return task
+
+
+def _collect_blocked_details(
+    cli: list[str],
+    board_name: str,
+    rows: Sequence[dict[str, Any]],
+) -> dict[str, str]:
+    details: dict[str, str] = {}
+    for row in rows:
+        if row.get("status") != "blocked":
+            continue
+        task_id = str(row.get("id") or "")
+        if not task_id:
+            continue
+        detail = _fetch_blocked_detail(cli, board_name, task_id)
+        if detail:
+            details[task_id] = detail
+    return details
+
+
+def _fetch_blocked_detail(cli: list[str], board_name: str, task_id: str) -> str | None:
+    try:
+        result = subprocess.run(
+            [*cli, "kanban", "--board", board_name, "show", task_id, "--json"],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        return _blocked_detail_from_task_show(json.loads(result.stdout))
+    except (subprocess.CalledProcessError, json.JSONDecodeError, OSError):
+        return None
+
+
+def _blocked_detail_from_task_show(show_payload: dict[str, Any], *, max_length: int = 500) -> str | None:
+    """Return the most actionable blocker text exposed by `hermes kanban show`."""
+    for candidate in (
+        _latest_block_event_reason(show_payload.get("events") or []),
+        _latest_run_summary_or_error(show_payload.get("runs") or []),
+        _latest_comment_body(show_payload.get("comments") or []),
+    ):
+        normalized = _safe_pdf_text(candidate, max_length=max_length)
+        if normalized:
+            return normalized
+    return None
+
+
+def _latest_block_event_reason(events: Sequence[dict[str, Any]]) -> str | None:
+    blocked_events = [event for event in events if event.get("kind") == "blocked"]
+    for event in sorted(blocked_events, key=_event_sort_key, reverse=True):
+        payload = event.get("payload") or {}
+        reason = payload.get("reason") if isinstance(payload, dict) else None
+        if isinstance(reason, str) and reason.strip():
+            return reason
+    return None
+
+
+def _latest_run_summary_or_error(runs: Sequence[dict[str, Any]]) -> str | None:
+    for run in sorted(runs, key=_run_sort_key, reverse=True):
+        for key in ("summary", "error"):
+            value = run.get(key)
+            if isinstance(value, str) and value.strip():
+                return value
+    return None
+
+
+def _latest_comment_body(comments: Sequence[dict[str, Any]]) -> str | None:
+    for comment in sorted(comments, key=_event_sort_key, reverse=True):
+        body = comment.get("body")
+        if isinstance(body, str) and body.strip():
+            return body
+    return None
+
+
+def _safe_pdf_text(value: str | None, *, max_length: int) -> str | None:
+    if not value:
+        return None
+    normalized = " ".join(value.split())
+    if not normalized:
+        return None
+    if len(normalized) <= max_length:
+        return normalized
+    return normalized[: max(0, max_length - 1)].rstrip() + "…"
+
+
+def _event_sort_key(item: dict[str, Any]) -> tuple[float, int]:
+    return (_numeric_sort_value(item.get("created_at")), _integer_sort_value(item.get("id")))
+
+
+def _run_sort_key(item: dict[str, Any]) -> tuple[float, float, int]:
+    return (
+        _numeric_sort_value(item.get("ended_at")),
+        _numeric_sort_value(item.get("started_at")),
+        _integer_sort_value(item.get("id")),
+    )
+
+
+def _integer_sort_value(value: Any) -> int:
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _numeric_sort_value(value: Any) -> float:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str) and value:
+        try:
+            return datetime.fromisoformat(value).timestamp()
+        except ValueError:
+            return 0.0
+    return 0.0
 
 
 def _changes_from_tasks(
@@ -183,10 +317,35 @@ def _resolve_hermes_command(explicit: str | None) -> list[str]:
 def _python_wrapped_if_needed(candidate: str) -> list[str]:
     path = Path(candidate)
     if path.name == "hermes" and path.is_file():
-        python = os.environ.get("HERMES_CLI_PYTHON") or "/usr/bin/python3"
-        if Path(python).exists():
+        python = _python_interpreter_for_script(path)
+        if python:
             return [python, str(path)]
     return [candidate]
+
+
+def _python_interpreter_for_script(path: Path) -> str | None:
+    first_line = _first_line(path)
+    if "python" not in first_line.lower():
+        return None
+
+    explicit_python = os.environ.get("HERMES_CLI_PYTHON")
+    if explicit_python and Path(explicit_python).exists():
+        return explicit_python
+
+    shebang = first_line.removeprefix("#!").strip()
+    executable = shebang.split(maxsplit=1)[0] if shebang else ""
+    if executable.startswith("/") and Path(executable).exists():
+        return executable
+
+    default_python = "/usr/bin/python3"
+    return default_python if Path(default_python).exists() else None
+
+
+def _first_line(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8", errors="ignore").splitlines()[0]
+    except (OSError, IndexError):
+        return ""
 
 
 def _last_update(row: dict[str, Any], tz: ZoneInfo) -> datetime:
